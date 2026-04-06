@@ -62,11 +62,21 @@
                         <option value="pagamento">Pagamento (- Reduz Dívida / Entrada)</option>
                         <option value="saida">Saída (Custo / Despesa da Clínica)</option>
                     </select>
+                    
                     <select id="lanc-cliente" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px; grid-column: span 2;">
                         <option value="">Selecione o Cliente...</option>
                         <option value="avulso">Sem Cliente / Saída Avulsa</option>
                     </select>
+                    
                     <input type="text" id="lanc-descricao" placeholder="Descrição (ex: Botox, Aluguel, etc)" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px; grid-column: span 2;">
+                    
+                    <div style="grid-column: span 2; display: flex; gap: 10px; align-items: center; background-color: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px dashed var(--borda-suave);">
+                        <label style="font-size: 0.85rem; color: #666; width: 120px;">Parcelamento<br>(Opcional):</label>
+                        <input type="number" id="lanc-parcela" placeholder="Parcela atual (ex: 2)" min="1" style="flex: 1; padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px;">
+                        <span style="color: #666; font-size: 0.9rem;">de</span>
+                        <input type="number" id="lanc-parcela-total" placeholder="Total (ex: 5)" min="1" style="flex: 1; padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px;">
+                    </div>
+
                     <input type="number" id="lanc-valor" placeholder="Valor (R$)" step="0.01" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px; grid-column: span 2;">
                     
                     <div style="grid-column: span 2; display: flex; gap: 10px;">
@@ -184,9 +194,7 @@
         let idLancamentoEditando = null;
         let dadosAntigosLancamento = null; 
 
-        // ==========================================
-        // 1. NAVEGAÇÃO
-        // ==========================================
+        // NAVEGAÇÃO
         const botoesMenu = document.querySelectorAll('.menu-btn');
         const telas = document.querySelectorAll('.tela');
 
@@ -201,9 +209,7 @@
             });
         });
 
-        // ==========================================
-        // 2. BUSCAR CLIENTES E DASHBOARD EM ABERTO
-        // ==========================================
+        // BUSCAR CLIENTES
         async function carregarClientes() {
             const container = document.getElementById('lista-clientes-container');
             const selectCliente = document.getElementById('lanc-cliente');
@@ -271,14 +277,10 @@
                 });
 
                 document.getElementById('dash-aberto').innerText = `R$ ${totalAberto.toFixed(2).replace('.', ',')}`;
-            } catch (error) {
-                console.error(error);
-            }
+            } catch (error) { console.error(error); }
         }
 
-        // ==========================================
-        // 3. BUSCAR LANÇAMENTOS
-        // ==========================================
+        // BUSCAR LANÇAMENTOS
         async function carregarLancamentos() {
             const tabela = document.getElementById('tabela-lancamentos');
             if (!tabela) return;
@@ -311,13 +313,21 @@
                         if (lanc.tipo === 'pagamento') { tipoTexto = 'Pagamento'; corTipo = '#28a745'; }
                         if (lanc.tipo === 'saida') { tipoTexto = 'Saída'; corTipo = 'var(--alerta)'; }
 
+                        // LÓGICA VISUAL DA PARCELA
+                        let textoParcela = "";
+                        if (lanc.parcelaAtual) {
+                            textoParcela = `<br><span style="font-size: 0.8rem; color: var(--dourado-escuro); font-weight: bold;">(Parcela ${lanc.parcelaAtual}`;
+                            if (lanc.parcelaTotal) textoParcela += `/${lanc.parcelaTotal}`;
+                            textoParcela += `)</span>`;
+                        }
+
                         const dataFormatada = lanc.data.split('-').reverse().join('/');
                         const tr = document.createElement('tr');
                         tr.style.borderBottom = "1px solid var(--borda-suave)";
                         tr.innerHTML = `
                             <td style="padding: 12px;">${dataFormatada}</td>
                             <td style="padding: 12px; color: ${corTipo}; font-weight: bold;">${tipoTexto}</td>
-                            <td style="padding: 12px;">${lanc.descricao}</td>
+                            <td style="padding: 12px;">${lanc.descricao} ${textoParcela}</td>
                             <td style="padding: 12px;">${lanc.clienteNome}</td>
                             <td style="padding: 12px; font-weight: bold;">R$ ${lanc.valor.toFixed(2).replace('.', ',')}</td>
                             <td style="padding: 12px; text-align: center;">
@@ -334,6 +344,10 @@
                             document.getElementById('lanc-descricao').value = lanc.descricao;
                             document.getElementById('lanc-valor').value = lanc.valor;
                             
+                            // Popula os campos de parcela
+                            document.getElementById('lanc-parcela').value = lanc.parcelaAtual || '';
+                            document.getElementById('lanc-parcela-total').value = lanc.parcelaTotal || '';
+                            
                             idLancamentoEditando = id;
                             dadosAntigosLancamento = lanc;
                             document.getElementById('titulo-form-lancamento').innerText = '✏️ Editando Lançamento';
@@ -343,7 +357,7 @@
                         });
 
                         tr.querySelector('.btn-excluir-lanc').addEventListener('click', async () => {
-                            if(confirm("Tem certeza que deseja excluir este lançamento?")) {
+                            if(confirm("Tem certeza que deseja excluir este lançamento? O saldo do cliente será ajustado automaticamente.")) {
                                 await excluirLancamento(id, lanc);
                             }
                         });
@@ -369,9 +383,7 @@
 
         document.getElementById('btn-filtrar').addEventListener('click', carregarLancamentos);
 
-        // ==========================================
-        // 4. FUNÇÕES MATEMÁTICAS (SALDO E EXCLUSÃO)
-        // ==========================================
+        // FUNÇÕES MATEMÁTICAS (ALTERAR SALDO DO CLIENTE)
         async function alterarSaldoCliente(clienteId, tipoAcao, valor) {
             if (clienteId === 'avulso') return;
             const clienteRef = doc(db, "clientes", clienteId);
@@ -394,13 +406,11 @@
                 alert("Lançamento excluído e saldo atualizado!");
                 carregarClientes();
                 carregarLancamentos();
-                gerarRelatorioAnual(); // Atualiza o ano também
+                gerarRelatorioAnual();
             } catch(e) { alert("Erro ao excluir."); }
         }
 
-        // ==========================================
-        // 5. SALVAR/ATUALIZAR DADOS
-        // ==========================================
+        // SALVAR OU ATUALIZAR CLIENTE
         document.getElementById('form-cliente').addEventListener('submit', async (e) => {
             e.preventDefault(); 
             const nome = document.getElementById('cli-nome').value;
@@ -425,6 +435,7 @@
             } catch (error) { alert("Erro ao salvar cliente."); }
         });
 
+        // SALVAR OU ATUALIZAR LANÇAMENTO
         document.getElementById('form-lancamento').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btnSalvar = document.getElementById('btn-salvar-lancamento');
@@ -436,6 +447,10 @@
             const clienteNome = clienteSelect.options[clienteSelect.selectedIndex].text;
             const descricao = document.getElementById('lanc-descricao').value;
             const valor = parseFloat(document.getElementById('lanc-valor').value);
+            
+            // Pega os valores das parcelas
+            const parcelaAtual = document.getElementById('lanc-parcela').value;
+            const parcelaTotal = document.getElementById('lanc-parcela-total').value;
 
             try {
                 btnSalvar.innerText = "Salvando...";
@@ -444,11 +459,18 @@
                     if (dadosAntigosLancamento.tipo === 'pagamento') await alterarSaldoCliente(dadosAntigosLancamento.clienteId, 'reverter_pagamento', dadosAntigosLancamento.valor);
                     
                     await alterarSaldoCliente(clienteId, tipo, valor);
-                    await updateDoc(doc(db, "lancamentos", idLancamentoEditando), { data, tipo, clienteId, clienteNome, descricao, valor });
+                    await updateDoc(doc(db, "lancamentos", idLancamentoEditando), { 
+                        data, tipo, clienteId, clienteNome, descricao, valor, 
+                        parcelaAtual: parcelaAtual || "", parcelaTotal: parcelaTotal || "" 
+                    });
                     alert("Lançamento atualizado!");
                     cancelarEdicaoLancamento();
                 } else {
-                    await addDoc(collection(db, "lancamentos"), { data, tipo, clienteId, clienteNome, descricao, valor, dataRegistro: new Date().toISOString() });
+                    await addDoc(collection(db, "lancamentos"), { 
+                        data, tipo, clienteId, clienteNome, descricao, valor, 
+                        parcelaAtual: parcelaAtual || "", parcelaTotal: parcelaTotal || "",
+                        dataRegistro: new Date().toISOString() 
+                    });
                     await alterarSaldoCliente(clienteId, tipo, valor);
                     alert("Lançamento registrado!");
                     document.getElementById('form-lancamento').reset();
@@ -456,10 +478,11 @@
                 btnSalvar.innerText = idLancamentoEditando ? "Atualizar Lançamento" : "Registrar Lançamento";
                 carregarClientes();
                 carregarLancamentos();
-                gerarRelatorioAnual(); // Atualiza o relatório anual também
+                gerarRelatorioAnual();
             } catch (error) { alert("Erro ao registrar."); }
         });
 
+        // BOTÕES DE CANCELAR EDIÇÃO
         function cancelarEdicaoCliente() {
             idClienteEditando = null;
             document.getElementById('form-cliente').reset();
@@ -479,9 +502,7 @@
         }
         document.getElementById('btn-cancelar-lancamento').addEventListener('click', cancelarEdicaoLancamento);
 
-        // ==========================================
-        // 6. RELATÓRIO ANUAL (NOVIDADE!)
-        // ==========================================
+        // GERAR RELATÓRIO ANUAL
         async function gerarRelatorioAnual() {
             const anoBusca = document.getElementById('filtro-ano').value;
             if (!anoBusca) return;
@@ -493,8 +514,6 @@
 
                 querySnapshot.forEach((docRef) => {
                     const lanc = docRef.data();
-                    
-                    // Pega apenas os 4 primeiros caracteres da data (YYYY) e compara
                     if (lanc.data && lanc.data.substring(0, 4) === anoBusca.toString()) {
                         if (lanc.tipo === 'pagamento') totalEntradasAno += lanc.valor;
                         if (lanc.tipo === 'saida') totalSaidasAno += lanc.valor;
@@ -510,16 +529,15 @@
                 elLucro.innerText = `R$ ${lucroAno.toFixed(2).replace('.', ',')}`;
                 elLucro.style.color = lucroAno >= 0 ? '#28a745' : 'var(--alerta)';
 
-            } catch (error) {
-                console.error("Erro ao gerar relatório anual: ", error);
-            }
+            } catch (error) { console.error("Erro ao gerar relatório anual: ", error); }
         }
 
-        // Configura o ano atual no campo e gera ao abrir a página
         const hoje = new Date();
-        document.getElementById('filtro-ano').value = hoje.getFullYear();
+        const campoAno = document.getElementById('filtro-ano');
+        if (campoAno) campoAno.value = hoje.getFullYear();
         
-        document.getElementById('btn-gerar-relatorio').addEventListener('click', gerarRelatorioAnual);
+        const btnGerarRelatorio = document.getElementById('btn-gerar-relatorio');
+        if (btnGerarRelatorio) btnGerarRelatorio.addEventListener('click', gerarRelatorioAnual);
 
         // Inicialização
         carregarClientes();
