@@ -1,0 +1,130 @@
+/* VARIÁVEIS DE COR DA IDENTIDADE VISUAL */
+:root {
+    --dourado: #C5A059; /* Dourado elegante */
+    --dourado-escuro: #A68446;
+    --fundo-offwhite: #FAFAFA;
+    --branco: #FFFFFF;
+    --texto-escuro: #333333;
+    --borda-suave: #E0E0E0;
+    --alerta: #D9534F; /* Vermelho suave para dívidas */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--fundo-offwhite);
+    color: var(--texto-escuro);
+}
+
+/* ESTRUTURA DO TOPO (HEADER) */
+.header-topo {
+    background-color: var(--branco);
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid var(--dourado);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* RESPONSIVIDADE DA LOGO */
+.logo {
+    max-width: 150px;
+    height: auto;
+    display: block;
+    margin: 0 auto 10px auto;
+}
+
+.header-topo h1 {
+    font-size: 1.2rem;
+    color: var(--dourado-escuro);
+    font-weight: 400;
+}
+
+/* MENU DE NAVEGAÇÃO */
+.menu {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
+    background-color: var(--fundo-offwhite);
+    flex-wrap: wrap; /* Ajusta no celular */
+}
+
+.menu-btn {
+    background-color: var(--branco);
+    border: 1px solid var(--borda-suave);
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--texto-escuro);
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.menu-btn:hover, .menu-btn.ativo {
+    background-color: var(--dourado);
+    color: var(--branco);
+    border-color: var(--dourado);
+}
+
+/* ÁREA PRINCIPAL */
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.tela {
+    display: none; /* Esconde todas as telas por padrão */
+}
+
+.tela.ativa {
+    display: block; /* Mostra apenas a ativa */
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* DASHBOARD CARDS */
+.cards-resumo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.card {
+    background-color: var(--branco);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--borda-suave);
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.card h3 {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--texto-escuro);
+}
+
+.card.destaque p {
+    color: var(--dourado-escuro);
+}
+
+.card.alerta p {
+    color: var(--alerta);
+}

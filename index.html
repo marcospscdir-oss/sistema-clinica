@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Financeiro - Clínica</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header-topo">
+        <img src="logo.png" alt="Logo da clínica" class="logo">
+        <h1>Sistema Financeiro</h1>
+    </header>
+
+    <nav class="menu">
+        <button class="menu-btn ativo" id="btn-dashboard">Dashboard</button>
+        <button class="menu-btn" id="btn-financeiro">Financeiro (Lançamentos)</button>
+        <button class="menu-btn" id="btn-clientes">Clientes</button>
+        <button class="menu-btn" id="btn-relatorio">Relatório Anual</button>
+    </nav>
+
+    <main id="conteudo-principal">
+        
+        <section id="tela-dashboard" class="tela ativa">
+            <h2>Dashboard - Visão Geral</h2>
+            <div class="cards-resumo">
+                <div class="card">
+                    <h3>Entradas (Mês)</h3>
+                    <p id="dash-entradas">R$ 0,00</p>
+                </div>
+                <div class="card">
+                    <h3>Saídas (Mês)</h3>
+                    <p id="dash-saidas">R$ 0,00</p>
+                </div>
+                <div class="card destaque">
+                    <h3>Lucro Líquido</h3>
+                    <p id="dash-lucro">R$ 0,00</p>
+                </div>
+                <div class="card alerta">
+                    <h3>Total em Aberto (Devendo)</h3>
+                    <p id="dash-aberto">R$ 0,00</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tela-financeiro" class="tela">
+            <h2>Lançamentos Financeiros</h2>
+
+            <div class="card" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; background-color: var(--fundo-offwhite);">
+                <label for="filtro-mes" style="font-weight: bold; color: var(--dourado-escuro);">Mês/Ano:</label>
+                <input type="month" id="filtro-mes" style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px; font-family: inherit;">
+                <button id="btn-filtrar" style="background-color: var(--dourado); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">Filtrar</button>
+            </div>
+
+            <div class="card" style="margin-bottom: 20px; text-align: left;">
+                <h3 id="titulo-form-lancamento" style="margin-bottom: 15px; color: var(--dourado-escuro);">+ Novo Lançamento</h3>
+                <form id="form-lancamento" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="date" id="lanc-data" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px;">
+                    <select id="lanc-tipo" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px;">
+                        <option value="">Selecione o Tipo...</option>
+                        <option value="procedimento">Procedimento (+ Aumenta Dívida)</option>
+                        <option value="pagamento">Pagamento (- Reduz Dívida / Entrada)</option>
+                        <option value="saida">Saída (Custo / Despesa da Clínica)</option>
+                    </select>
+                    <select id="lanc-cliente" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px; grid-column: span 2;">
+                        <option value="">Selecione o Cliente...</option>
+                        <option value="avulso">Sem Cliente / Saída Avulsa</option>
+                    </select>
+                    <input type="text" id="lanc-descricao" placeholder="Descrição (ex: Botox, Aluguel, etc)" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px; grid-column: span 2;">
+                    <input type="number" id="lanc-valor" placeholder="Valor (R$)" step="0.01" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px; grid-column: span 2;">
+                    
+                    <div style="grid-column: span 2; display: flex; gap: 10px;">
+                        <button type="submit" id="btn-salvar-lancamento" style="flex: 1; background-color: var(--dourado); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Registrar Lançamento</button>
+                        <button type="button" id="btn-cancelar-lancamento" style="display: none; background-color: #777; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Cancelar Edição</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="cards-resumo" style="margin-bottom: 20px;">
+                <div class="card" style="padding: 15px;">
+                    <h3 style="font-size: 0.85rem;">Entradas (Pagamentos)</h3>
+                    <p id="resumo-entradas" style="color: #28a745; font-size: 1.2rem;">R$ 0,00</p>
+                </div>
+                <div class="card" style="padding: 15px;">
+                    <h3 style="font-size: 0.85rem;">Saídas (Custos)</h3>
+                    <p id="resumo-saidas" style="color: var(--alerta); font-size: 1.2rem;">R$ 0,00</p>
+                </div>
+                <div class="card destaque" style="padding: 15px;">
+                    <h3 style="font-size: 0.85rem;">Lucro do Mês</h3>
+                    <p id="resumo-lucro" style="font-size: 1.2rem;">R$ 0,00</p>
+                </div>
+            </div>
+
+            <div class="card" style="overflow-x: auto; padding: 0;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background-color: var(--dourado); color: white;">
+                            <th style="padding: 12px; border-bottom: 2px solid var(--dourado-escuro);">Data</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--dourado-escuro);">Tipo</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--dourado-escuro);">Descrição</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--dourado-escuro);">Cliente</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--dourado-escuro);">Valor</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--dourado-escuro); text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-lancamentos">
+                        <tr><td colspan="6" style="padding: 15px; text-align: center; color: #777;">Os lançamentos aparecerão aqui...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="tela-clientes" class="tela">
+            <h2>Gerenciar Clientes</h2>
+            
+            <div class="card" style="margin-bottom: 20px; text-align: left;">
+                <h3 id="titulo-form-cliente" style="margin-bottom: 15px; color: var(--dourado-escuro);">+ Novo Cliente</h3>
+                <form id="form-cliente" style="display: grid; gap: 10px;">
+                    <input type="text" id="cli-nome" placeholder="Nome Completo" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px;">
+                    <input type="text" id="cli-telefone" placeholder="Telefone (WhatsApp)" required style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px;">
+                    <input type="date" id="cli-nascimento" style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px;">
+                    <textarea id="cli-obs" placeholder="Observações..." rows="3" style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px;"></textarea>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" id="btn-salvar-cliente" style="flex: 1; background-color: var(--dourado); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Salvar Cliente</button>
+                        <button type="button" id="btn-cancelar-cliente" style="display: none; background-color: #777; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Cancelar Edição</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Lista de Clientes Cadastrados</h3>
+                <div id="lista-clientes-container" style="margin-top: 15px; display: grid; gap: 10px;">
+                    <p style="font-size: 0.9rem; color: #777;">Carregando clientes...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tela-relatorio" class="tela">
+            <h2>Relatório Anual</h2>
+            
+            <div class="card" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; background-color: var(--fundo-offwhite);">
+                <label for="filtro-ano" style="font-weight: bold; color: var(--dourado-escuro);">Selecione o Ano:</label>
+                <input type="number" id="filtro-ano" style="padding: 8px; border: 1px solid var(--borda-suave); border-radius: 4px; font-family: inherit; width: 100px;">
+                <button id="btn-gerar-relatorio" style="background-color: var(--dourado); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">Gerar Relatório</button>
+            </div>
+
+            <div class="cards-resumo">
+                <div class="card" style="padding: 20px;">
+                    <h3 style="font-size: 1rem;">Total de Entradas no Ano</h3>
+                    <p id="relatorio-entradas" style="color: #28a745; font-size: 1.8rem; margin-top: 10px;">R$ 0,00</p>
+                </div>
+                <div class="card" style="padding: 20px;">
+                    <h3 style="font-size: 1rem;">Total de Saídas no Ano</h3>
+                    <p id="relatorio-saidas" style="color: var(--alerta); font-size: 1.8rem; margin-top: 10px;">R$ 0,00</p>
+                </div>
+                <div class="card destaque" style="padding: 20px;">
+                    <h3 style="font-size: 1rem;">Lucro Anual</h3>
+                    <p id="relatorio-lucro" style="font-size: 1.8rem; margin-top: 10px;">R$ 0,00</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCN8ZX00pdvENAzJx_h3ymVtp4cfkTR6wU",
+            authDomain: "sistema-financeiro-clinica.firebaseapp.com",
+            projectId: "sistema-financeiro-clinica",
+            storageBucket: "sistema-financeiro-clinica.firebasestorage.app",
+            messagingSenderId: "199395159745",
+            appId: "1:199395159745:web:667a96031337db5831ae40",
+            measurementId: "G-EYT28L7B8Q"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let idClienteEditando = null;
+        let idLancamentoEditando = null;
+        let dadosAntigosLancamento = null; 
+
+        // ==========================================
+        // 1. NAVEGAÇÃO
+        // ==========================================
+        const botoesMenu = document.querySelectorAll('.menu-btn');
+        const telas = document.querySelectorAll('.tela');
+
+        botoesMenu.forEach(botao => {
+            botao.addEventListener('click', () => {
+                botoesMenu.forEach(btn => btn.classList.remove('ativo'));
+                telas.forEach(tela => tela.classList.remove('ativa'));
+                botao.classList.add('ativo');
+                const idTela = botao.id.replace('btn-', 'tela-');
+                const telaAlvo = document.getElementById(idTela);
+                if(telaAlvo) telaAlvo.classList.add('ativa');
+            });
+        });
+
+        // ==========================================
+        // 2. BUSCAR CLIENTES E DASHBOARD EM ABERTO
+        // ==========================================
+        async function carregarClientes() {
+            const container = document.getElementById('lista-clientes-container');
+            const selectCliente = document.getElementById('lanc-cliente');
+            let totalAberto = 0;
+            
+            try {
+                const querySnapshot = await getDocs(collection(db, "clientes"));
+                if (container) container.innerHTML = ''; 
+                if (selectCliente) selectCliente.innerHTML = '<option value="">Selecione o Cliente...</option><option value="avulso">Sem Cliente / Saída Avulsa</option>';
+
+                if (querySnapshot.empty && container) {
+                    container.innerHTML = '<p style="font-size: 0.9rem; color: #777;">Nenhum cliente cadastrado.</p>';
+                    document.getElementById('dash-aberto').innerText = 'R$ 0,00';
+                    return;
+                }
+
+                querySnapshot.forEach((docRef) => {
+                    const cliente = docRef.data();
+                    const id = docRef.id;
+                    const saldo = cliente.saldoDevedor || 0;
+                    
+                    if (saldo > 0) totalAberto += saldo;
+
+                    if (container) {
+                        const corSaldo = saldo > 0 ? 'var(--alerta)' : 'var(--texto-escuro)';
+                        const div = document.createElement('div');
+                        div.style = "padding: 15px; border: 1px solid var(--borda-suave); border-radius: 4px; display: flex; justify-content: space-between; align-items: center; background-color: var(--fundo-offwhite);";
+                        
+                        div.innerHTML = `
+                            <div>
+                                <strong style="color: var(--dourado-escuro);">${cliente.nome}</strong><br>
+                                <span style="font-size: 0.85rem; color: #666;">📞 ${cliente.telefone}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size: 0.85rem; color: #666;">Saldo Devedor:</span><br>
+                                <strong style="color: ${corSaldo}">R$ ${saldo.toFixed(2).replace('.', ',')}</strong>
+                                <div style="margin-top: 5px;">
+                                    <button class="btn-editar-cli" data-id="${id}" style="background:none; border:none; color:var(--dourado-escuro); cursor:pointer; font-weight:bold; font-size:0.85rem;">✏️ Editar</button>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(div);
+
+                        div.querySelector('.btn-editar-cli').addEventListener('click', () => {
+                            document.getElementById('cli-nome').value = cliente.nome;
+                            document.getElementById('cli-telefone').value = cliente.telefone;
+                            document.getElementById('cli-nascimento').value = cliente.nascimento || '';
+                            document.getElementById('cli-obs').value = cliente.observacoes || '';
+                            
+                            idClienteEditando = id;
+                            document.getElementById('titulo-form-cliente').innerText = '✏️ Editando Cliente';
+                            document.getElementById('btn-salvar-cliente').innerText = 'Atualizar Cliente';
+                            document.getElementById('btn-cancelar-cliente').style.display = 'block';
+                            document.getElementById('cli-nome').focus();
+                            window.scrollTo(0, 0);
+                        });
+                    }
+
+                    if (selectCliente) {
+                        const option = document.createElement('option');
+                        option.value = id;
+                        option.textContent = cliente.nome;
+                        selectCliente.appendChild(option);
+                    }
+                });
+
+                document.getElementById('dash-aberto').innerText = `R$ ${totalAberto.toFixed(2).replace('.', ',')}`;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // ==========================================
+        // 3. BUSCAR LANÇAMENTOS
+        // ==========================================
+        async function carregarLancamentos() {
+            const tabela = document.getElementById('tabela-lancamentos');
+            if (!tabela) return;
+
+            let mesBusca = document.getElementById('filtro-mes').value;
+            if (!mesBusca) {
+                const hoje = new Date();
+                mesBusca = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+                document.getElementById('filtro-mes').value = mesBusca; 
+            }
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "lancamentos"));
+                tabela.innerHTML = '';
+                
+                let totalEntradas = 0, totalSaidas = 0, temLancamento = false;
+
+                querySnapshot.forEach((docRef) => {
+                    const lanc = docRef.data();
+                    const id = docRef.id;
+                    
+                    if (lanc.data && lanc.data.substring(0, 7) === mesBusca) {
+                        temLancamento = true;
+                        
+                        if (lanc.tipo === 'pagamento') totalEntradas += lanc.valor;
+                        if (lanc.tipo === 'saida') totalSaidas += lanc.valor;
+
+                        let tipoTexto = '', corTipo = '';
+                        if (lanc.tipo === 'procedimento') { tipoTexto = 'Procedimento'; corTipo = 'var(--texto-escuro)'; }
+                        if (lanc.tipo === 'pagamento') { tipoTexto = 'Pagamento'; corTipo = '#28a745'; }
+                        if (lanc.tipo === 'saida') { tipoTexto = 'Saída'; corTipo = 'var(--alerta)'; }
+
+                        const dataFormatada = lanc.data.split('-').reverse().join('/');
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = "1px solid var(--borda-suave)";
+                        tr.innerHTML = `
+                            <td style="padding: 12px;">${dataFormatada}</td>
+                            <td style="padding: 12px; color: ${corTipo}; font-weight: bold;">${tipoTexto}</td>
+                            <td style="padding: 12px;">${lanc.descricao}</td>
+                            <td style="padding: 12px;">${lanc.clienteNome}</td>
+                            <td style="padding: 12px; font-weight: bold;">R$ ${lanc.valor.toFixed(2).replace('.', ',')}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <button class="btn-editar-lanc" data-id="${id}" style="background:none; border:none; color:var(--dourado-escuro); cursor:pointer; margin-right:8px;">✏️</button>
+                                <button class="btn-excluir-lanc" data-id="${id}" style="background:none; border:none; color:var(--alerta); cursor:pointer;">🗑️</button>
+                            </td>
+                        `;
+                        tabela.appendChild(tr);
+
+                        tr.querySelector('.btn-editar-lanc').addEventListener('click', () => {
+                            document.getElementById('lanc-data').value = lanc.data;
+                            document.getElementById('lanc-tipo').value = lanc.tipo;
+                            document.getElementById('lanc-cliente').value = lanc.clienteId;
+                            document.getElementById('lanc-descricao').value = lanc.descricao;
+                            document.getElementById('lanc-valor').value = lanc.valor;
+                            
+                            idLancamentoEditando = id;
+                            dadosAntigosLancamento = lanc;
+                            document.getElementById('titulo-form-lancamento').innerText = '✏️ Editando Lançamento';
+                            document.getElementById('btn-salvar-lancamento').innerText = 'Atualizar Lançamento';
+                            document.getElementById('btn-cancelar-lancamento').style.display = 'block';
+                            window.scrollTo(0, 0);
+                        });
+
+                        tr.querySelector('.btn-excluir-lanc').addEventListener('click', async () => {
+                            if(confirm("Tem certeza que deseja excluir este lançamento?")) {
+                                await excluirLancamento(id, lanc);
+                            }
+                        });
+                    }
+                });
+
+                if (!temLancamento) {
+                    tabela.innerHTML = '<tr><td colspan="6" style="padding: 15px; text-align: center; color: #777;">Nenhum lançamento neste mês.</td></tr>';
+                }
+
+                const lucro = totalEntradas - totalSaidas;
+                document.getElementById('resumo-entradas').innerText = `R$ ${totalEntradas.toFixed(2).replace('.', ',')}`;
+                document.getElementById('resumo-saidas').innerText = `R$ ${totalSaidas.toFixed(2).replace('.', ',')}`;
+                document.getElementById('resumo-lucro').innerText = `R$ ${lucro.toFixed(2).replace('.', ',')}`;
+                document.getElementById('resumo-lucro').style.color = lucro >= 0 ? '#28a745' : 'var(--alerta)';
+
+                document.getElementById('dash-entradas').innerText = `R$ ${totalEntradas.toFixed(2).replace('.', ',')}`;
+                document.getElementById('dash-saidas').innerText = `R$ ${totalSaidas.toFixed(2).replace('.', ',')}`;
+                document.getElementById('dash-lucro').innerText = `R$ ${lucro.toFixed(2).replace('.', ',')}`;
+
+            } catch (error) { console.error(error); }
+        }
+
+        document.getElementById('btn-filtrar').addEventListener('click', carregarLancamentos);
+
+        // ==========================================
+        // 4. FUNÇÕES MATEMÁTICAS (SALDO E EXCLUSÃO)
+        // ==========================================
+        async function alterarSaldoCliente(clienteId, tipoAcao, valor) {
+            if (clienteId === 'avulso') return;
+            const clienteRef = doc(db, "clientes", clienteId);
+            const clienteSnap = await getDoc(clienteRef);
+            if (clienteSnap.exists()) {
+                let saldoAtual = clienteSnap.data().saldoDevedor || 0;
+                if (tipoAcao === 'procedimento') saldoAtual += valor;
+                if (tipoAcao === 'pagamento') saldoAtual -= valor;
+                if (tipoAcao === 'reverter_procedimento') saldoAtual -= valor; 
+                if (tipoAcao === 'reverter_pagamento') saldoAtual += valor; 
+                await updateDoc(clienteRef, { saldoDevedor: saldoAtual });
+            }
+        }
+
+        async function excluirLancamento(id, lanc) {
+            try {
+                if (lanc.tipo === 'procedimento') await alterarSaldoCliente(lanc.clienteId, 'reverter_procedimento', lanc.valor);
+                if (lanc.tipo === 'pagamento') await alterarSaldoCliente(lanc.clienteId, 'reverter_pagamento', lanc.valor);
+                await deleteDoc(doc(db, "lancamentos", id));
+                alert("Lançamento excluído e saldo atualizado!");
+                carregarClientes();
+                carregarLancamentos();
+                gerarRelatorioAnual(); // Atualiza o ano também
+            } catch(e) { alert("Erro ao excluir."); }
+        }
+
+        // ==========================================
+        // 5. SALVAR/ATUALIZAR DADOS
+        // ==========================================
+        document.getElementById('form-cliente').addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            const nome = document.getElementById('cli-nome').value;
+            const telefone = document.getElementById('cli-telefone').value;
+            const nascimento = document.getElementById('cli-nascimento').value;
+            const obs = document.getElementById('cli-obs').value;
+            const btnSalvar = document.getElementById('btn-salvar-cliente');
+
+            try {
+                btnSalvar.innerText = "Salvando...";
+                if (idClienteEditando) {
+                    await updateDoc(doc(db, "clientes", idClienteEditando), { nome, telefone, nascimento, observacoes: obs });
+                    alert("Cliente atualizado!");
+                    cancelarEdicaoCliente();
+                } else {
+                    await addDoc(collection(db, "clientes"), { nome, telefone, nascimento, observacoes: obs, saldoDevedor: 0, dataCadastro: new Date().toISOString() });
+                    alert("Cliente cadastrado com sucesso!");
+                    document.getElementById('form-cliente').reset();
+                }
+                btnSalvar.innerText = idClienteEditando ? "Atualizar Cliente" : "Salvar Cliente";
+                carregarClientes();
+            } catch (error) { alert("Erro ao salvar cliente."); }
+        });
+
+        document.getElementById('form-lancamento').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnSalvar = document.getElementById('btn-salvar-lancamento');
+            
+            const data = document.getElementById('lanc-data').value;
+            const tipo = document.getElementById('lanc-tipo').value;
+            const clienteId = document.getElementById('lanc-cliente').value;
+            const clienteSelect = document.getElementById('lanc-cliente');
+            const clienteNome = clienteSelect.options[clienteSelect.selectedIndex].text;
+            const descricao = document.getElementById('lanc-descricao').value;
+            const valor = parseFloat(document.getElementById('lanc-valor').value);
+
+            try {
+                btnSalvar.innerText = "Salvando...";
+                if (idLancamentoEditando) {
+                    if (dadosAntigosLancamento.tipo === 'procedimento') await alterarSaldoCliente(dadosAntigosLancamento.clienteId, 'reverter_procedimento', dadosAntigosLancamento.valor);
+                    if (dadosAntigosLancamento.tipo === 'pagamento') await alterarSaldoCliente(dadosAntigosLancamento.clienteId, 'reverter_pagamento', dadosAntigosLancamento.valor);
+                    
+                    await alterarSaldoCliente(clienteId, tipo, valor);
+                    await updateDoc(doc(db, "lancamentos", idLancamentoEditando), { data, tipo, clienteId, clienteNome, descricao, valor });
+                    alert("Lançamento atualizado!");
+                    cancelarEdicaoLancamento();
+                } else {
+                    await addDoc(collection(db, "lancamentos"), { data, tipo, clienteId, clienteNome, descricao, valor, dataRegistro: new Date().toISOString() });
+                    await alterarSaldoCliente(clienteId, tipo, valor);
+                    alert("Lançamento registrado!");
+                    document.getElementById('form-lancamento').reset();
+                }
+                btnSalvar.innerText = idLancamentoEditando ? "Atualizar Lançamento" : "Registrar Lançamento";
+                carregarClientes();
+                carregarLancamentos();
+                gerarRelatorioAnual(); // Atualiza o relatório anual também
+            } catch (error) { alert("Erro ao registrar."); }
+        });
+
+        function cancelarEdicaoCliente() {
+            idClienteEditando = null;
+            document.getElementById('form-cliente').reset();
+            document.getElementById('titulo-form-cliente').innerText = '+ Novo Cliente';
+            document.getElementById('btn-salvar-cliente').innerText = 'Salvar Cliente';
+            document.getElementById('btn-cancelar-cliente').style.display = 'none';
+        }
+        document.getElementById('btn-cancelar-cliente').addEventListener('click', cancelarEdicaoCliente);
+
+        function cancelarEdicaoLancamento() {
+            idLancamentoEditando = null;
+            dadosAntigosLancamento = null;
+            document.getElementById('form-lancamento').reset();
+            document.getElementById('titulo-form-lancamento').innerText = '+ Novo Lançamento';
+            document.getElementById('btn-salvar-lancamento').innerText = 'Registrar Lançamento';
+            document.getElementById('btn-cancelar-lancamento').style.display = 'none';
+        }
+        document.getElementById('btn-cancelar-lancamento').addEventListener('click', cancelarEdicaoLancamento);
+
+        // ==========================================
+        // 6. RELATÓRIO ANUAL (NOVIDADE!)
+        // ==========================================
+        async function gerarRelatorioAnual() {
+            const anoBusca = document.getElementById('filtro-ano').value;
+            if (!anoBusca) return;
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "lancamentos"));
+                let totalEntradasAno = 0;
+                let totalSaidasAno = 0;
+
+                querySnapshot.forEach((docRef) => {
+                    const lanc = docRef.data();
+                    
+                    // Pega apenas os 4 primeiros caracteres da data (YYYY) e compara
+                    if (lanc.data && lanc.data.substring(0, 4) === anoBusca.toString()) {
+                        if (lanc.tipo === 'pagamento') totalEntradasAno += lanc.valor;
+                        if (lanc.tipo === 'saida') totalSaidasAno += lanc.valor;
+                    }
+                });
+
+                const lucroAno = totalEntradasAno - totalSaidasAno;
+
+                document.getElementById('relatorio-entradas').innerText = `R$ ${totalEntradasAno.toFixed(2).replace('.', ',')}`;
+                document.getElementById('relatorio-saidas').innerText = `R$ ${totalSaidasAno.toFixed(2).replace('.', ',')}`;
+                
+                const elLucro = document.getElementById('relatorio-lucro');
+                elLucro.innerText = `R$ ${lucroAno.toFixed(2).replace('.', ',')}`;
+                elLucro.style.color = lucroAno >= 0 ? '#28a745' : 'var(--alerta)';
+
+            } catch (error) {
+                console.error("Erro ao gerar relatório anual: ", error);
+            }
+        }
+
+        // Configura o ano atual no campo e gera ao abrir a página
+        const hoje = new Date();
+        document.getElementById('filtro-ano').value = hoje.getFullYear();
+        
+        document.getElementById('btn-gerar-relatorio').addEventListener('click', gerarRelatorioAnual);
+
+        // Inicialização
+        carregarClientes();
+        carregarLancamentos();
+        gerarRelatorioAnual();
+
+    </script>
+</body>
+</html>
