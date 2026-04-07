@@ -32,10 +32,9 @@ body {
 
 /* RESPONSIVIDADE DA LOGO */
 .logo {
-    max-width: 150px;
+    width: 300px;
     height: auto;
-    display: block;
-    margin: 0 auto 10px auto;
+    background-color: var(--fundo-offwhite);
 }
 
 .header-topo h1 {
